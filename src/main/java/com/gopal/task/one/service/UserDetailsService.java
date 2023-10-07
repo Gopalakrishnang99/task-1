@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 
 public interface UserDetailsService {
 
-    Mono<UserDetails> getUserDetails(Long userId);
+    Mono<UserDetailsDto> getUserDetails(Long userId);
 
     Flux<String> getRolesOfUser(Long userId);
 

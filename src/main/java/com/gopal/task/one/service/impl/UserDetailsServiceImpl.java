@@ -1,6 +1,7 @@
 package com.gopal.task.one.service.impl;
 
 import com.gopal.task.one.dto.RoleFeatureDto;
+import com.gopal.task.one.dto.UserDetailsDto;
 import com.gopal.task.one.dto.UserRolesDataDto;
 import com.gopal.task.one.exception.ApiException;
 import com.gopal.task.one.exception.UserNotFoundException;
@@ -47,10 +48,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     @Transactional
-    public Mono<UserDetails> getUserDetails(Long userId) {
+    public Mono<UserDetailsDto> getUserDetails(Long userId) {
         return userRepo.findById(userId).switchIfEmpty(
                 Mono.error(() -> new UserNotFoundException("User with ID " + userId + " is not found"))
-        );
+        ).map(userMapper::userEntityToDto);
     }
 
     @Override
@@ -69,7 +70,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         UserRolesDataDto rolesDataDto = new UserRolesDataDto();
 
-        Mono<Set<String>> rolesSet = webClient.get()
+        Mono<Set<String>> rolesSet = webClient
+                .get()
                 .uri("/user/{userId}/roles", userId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,
@@ -78,20 +80,20 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 })
                 .subscribeOn(Schedulers.boundedElastic());
 
-        Mono<UserDetails> userDetails = getUserDetails(userId);
+        Mono<UserDetailsDto> userDetails = getUserDetails(userId)
+                .subscribeOn(Schedulers.boundedElastic());
 
-        Flux<RolePermission> roleFeatures = userRoleRepo.findAllByUserId(userId)
+        Mono<List<RolePermission>> roleFeaturesSet = userRoleRepo
+                .findAllByUserId(userId)
                 .flatMap(userRole -> {
                     return userRoleDataRepository.getRoleFeatures(userRole.getRoleId());
-                });
-
-        Mono<List<RolePermission>> roleFeaturesSet = roleFeatures
+                })
                 .collectList().defaultIfEmpty(List.of())
-                .subscribeOn(Schedulers.parallel());
+                .subscribeOn(Schedulers.boundedElastic());
 
         return Mono.zip(rolesSet, userDetails, roleFeaturesSet).map(tuple3 -> {
             rolesDataDto.setRoles(tuple3.getT1());
-            rolesDataDto.setUser(userMapper.userEntityToDto(tuple3.getT2()));
+            rolesDataDto.setUser(tuple3.getT2());
             Map<Long, RoleFeatureDto> featureMap = new HashMap<>();
             tuple3.getT3().forEach(rolePermission -> {
                 if (!featureMap.containsKey(rolePermission.getFeatureId())) {

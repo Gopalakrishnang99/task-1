@@ -22,12 +22,10 @@ public class UserController {
 
     private final UserDetailsService userService;
 
-    private final UserMapper mapper;
-
     @GetMapping("/{id}")
     public Mono<ResponseEntity<UserDetailsDto>> getUserDetails(@PathVariable Long id) {
         return userService.getUserDetails(id).
-                map(user -> ResponseEntity.ok(mapper.userEntityToDto(user)));
+                map(ResponseEntity::ok);
     }
 
     @GetMapping("/{id}/roles")
