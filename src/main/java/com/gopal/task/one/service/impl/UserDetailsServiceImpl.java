@@ -1,5 +1,6 @@
 package com.gopal.task.one.service.impl;
 
+import com.gopal.task.one.exception.UserNotFoundException;
 import com.gopal.task.one.model.Role;
 import com.gopal.task.one.model.UserDetails;
 import com.gopal.task.one.repository.UserDetailsRepository;
@@ -29,7 +30,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional
     public Mono<UserDetails> getUserDetails(Long userId) {
-        return userRepo.findById(userId);
+
+        return userRepo.findById(userId).switchIfEmpty(
+                Mono.error( () -> new UserNotFoundException("User with ID "+userId+" is not found"))
+        );
     }
 
     @Override
