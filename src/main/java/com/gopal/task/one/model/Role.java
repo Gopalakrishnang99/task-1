@@ -5,13 +5,14 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 @Data
-@Table("feature")
-public class Feature {
+@Table("role")
+public class Role {
 
     @Id
-    private Long featureId;
+    private Long roleId;
 
-    private String featureName;
+    private String roleName;
 
-    private String description;
+    private String roleDescription;
+
 }

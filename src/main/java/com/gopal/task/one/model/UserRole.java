@@ -3,15 +3,22 @@ package com.gopal.task.one.model;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Data
+@Table("user_role_mapping")
 public class UserRole {
 
     @Id
+    private Long id;
+
+    private Long userId;
+
     private Long roleId;
 
-    private String roleName;
+    @Transient
+    private UserDetails user;
 
-    private String roleDescription;
-
+    @Transient
+    private Role role;
 }
