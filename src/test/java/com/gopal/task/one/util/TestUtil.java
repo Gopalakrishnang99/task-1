@@ -3,9 +3,7 @@ package com.gopal.task.one.util;
 import com.gopal.task.one.dto.RoleFeatureDto;
 import com.gopal.task.one.dto.UserDetailsDto;
 import com.gopal.task.one.dto.UserRolesDataDto;
-import com.gopal.task.one.model.Role;
-import com.gopal.task.one.model.UserDetails;
-import com.gopal.task.one.model.UserRole;
+import com.gopal.task.one.model.*;
 
 import java.util.Set;
 
@@ -52,5 +50,21 @@ public class TestUtil {
         role.setDescription("description");
         role.setRoleId(id);
         return role;
+    }
+
+    public static RolePermission getRolePermission(Long roleId) {
+        RolePermission rolePermission = new RolePermission();
+        rolePermission.setRoleId(roleId);
+        rolePermission.setFeatureId(1L);
+        rolePermission.setPermissionId(1L);
+        Feature feature = new Feature();
+        feature.setFeatureId(1L);
+        feature.setFeatureName("design");
+        rolePermission.setFeature(feature);
+        Permission permission = new Permission();
+        permission.setPermissionId(1L);
+        permission.setPermissionName("read");
+        rolePermission.setPermission(permission);
+        return rolePermission;
     }
 }

@@ -8,14 +8,18 @@ import com.gopal.task.one.repository.UserRoleDataRepository;
 import com.gopal.task.one.repository.UserRoleRepository;
 import com.gopal.task.one.util.TestUtil;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.reactive.function.client.ClientRequest;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -42,8 +46,18 @@ class UserDetailsServiceImplTest {
     @Spy
     UserMapper userMapper;
 
-    @InjectMocks
+    @Mock
+    ExchangeFunction exchangeFunction;
+
     UserDetailsServiceImpl userService;
+
+    @BeforeEach
+    public void setUpMockWebClient() {
+        webClient = WebClient.builder()
+                .exchangeFunction(exchangeFunction)
+                .build();
+        userService = new UserDetailsServiceImpl(userRepo, userRoleRepo, roleRepo, userRoleDataRepo, webClient, userMapper);
+    }
 
     @Test
     @DisplayName("Get user details - user exists")
@@ -80,7 +94,7 @@ class UserDetailsServiceImplTest {
                         )
                 );
         Mockito.when(roleRepo.findById(Mockito.anyLong()))
-                .thenAnswer(i->Mono.just(TestUtil.getRoleEntity(i.getArgument(0))));
+                .thenAnswer(i -> Mono.just(TestUtil.getRoleEntity(i.getArgument(0))));
         StepVerifier.create(userService.getRolesOfUser(1L))
                 .expectNext("admin")
                 .expectNext("user")
@@ -91,13 +105,37 @@ class UserDetailsServiceImplTest {
     @DisplayName("Test to get roles of a user - roles/user does not exist")
     void getRolesOfUserWhenUserOrRolesDoesNotExist() {
         Mockito.when(userRoleRepo.findAllByUserId(Mockito.anyLong()))
-                        .thenReturn(Flux.empty());
+                .thenReturn(Flux.empty());
         StepVerifier.create(userService.getRolesOfUser(1L))
                 .expectNextCount(0L)
                 .verifyComplete();
     }
 
     @Test
-    void getRoleDetailsOfUser() {
+    @DisplayName("Test to get feature set of user")
+    void getFeatureSetOfUser() {
+        Mockito.when(exchangeFunction.exchange(Mockito.any(ClientRequest.class)))
+                .thenReturn(
+                        Mono.just(ClientResponse.create(HttpStatus.OK)
+                                .header("content-type", "application/json")
+                                .body("[\"admin\"]").build())
+                );
+        Mockito.when(userRepo.findById(Mockito.anyLong()))
+                .thenAnswer(i -> Mono.just(TestUtil.getTestUserDetails(i.getArgument(0))));
+        Mockito.when(userRoleRepo.findAllByUserId(Mockito.anyLong()))
+                .thenAnswer(i ->
+                        Flux.just(
+                                TestUtil.getUserRole(i.getArgument(0), 2L),
+                                TestUtil.getUserRole(i.getArgument(0), 3L)
+                        )
+                );
+        Mockito.when(userRoleDataRepo.getRoleFeatures(Mockito.anyLong()))
+                .thenAnswer(i -> Flux.just(TestUtil.getRolePermission(i.getArgument(0))));
+        StepVerifier.create(userService.getRoleDetailsOfUser(1L))
+                .consumeNextWith(userRolesDataDto -> {
+                    Assertions.assertEquals(userRolesDataDto.getFeatures().size(),1);
+                    Assertions.assertEquals(userRolesDataDto.getUser().getEmail(),"email@email.com");
+                })
+                .verifyComplete();
     }
 }
