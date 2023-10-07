@@ -14,6 +14,4 @@ public class UserDetailsDto {
     private String firstName;
 
     private String lastName;
-
-    private Set<String> roles;
 }

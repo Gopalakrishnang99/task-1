@@ -1,6 +1,5 @@
 package com.gopal.task.one.controller;
 
-import com.gopal.task.one.dto.RoleFeatureDto;
 import com.gopal.task.one.dto.UserDetailsDto;
 import com.gopal.task.one.dto.UserRolesDataDto;
 import com.gopal.task.one.mapper.UserMapper;
@@ -38,7 +37,7 @@ public class UserController {
 
     @GetMapping("/{id}/feature-set")
     public Mono<ResponseEntity<UserRolesDataDto>> getFeaturesOfUser(@PathVariable Long id) {
-        return null;
+        return userService.getRoleDetailsOfUser(id).map(ResponseEntity::ok);
     }
 
 }
