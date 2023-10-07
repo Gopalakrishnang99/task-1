@@ -1,5 +1,6 @@
 package com.gopal.task.one.service.impl;
 
+import com.gopal.task.one.dto.UserRolesDataDto;
 import com.gopal.task.one.exception.UserNotFoundException;
 import com.gopal.task.one.model.Role;
 import com.gopal.task.one.model.UserDetails;
@@ -13,8 +14,11 @@ import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -27,12 +31,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final R2dbcEntityTemplate template;
 
+    private final WebClient webClient;
+
     @Override
     @Transactional
     public Mono<UserDetails> getUserDetails(Long userId) {
 
         return userRepo.findById(userId).switchIfEmpty(
-                Mono.error( () -> new UserNotFoundException("User with ID "+userId+" is not found"))
+                Mono.error(() -> new UserNotFoundException("User with ID " + userId + " is not found"))
         );
     }
 
@@ -40,9 +46,20 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Transactional
     public Flux<String> getRolesOfUser(Long userId) {
         return userRoleRepo.findAllByUserId(userId)
+                .switchIfEmpty(Mono.error(new UserNotFoundException("User with ID " + userId + " is not found")))
                 .flatMap(role ->
                         template.selectOne(Query.query(Criteria.where("role_id").is(role.getRoleId())),
                                 Role.class))
                 .map(Role::getRoleName);
+    }
+
+    @Override
+    @Transactional
+    public Mono<UserRolesDataDto> getRoleDetailsOfUser(Long userId) {
+        Flux<String> roles = webClient.get()
+                .uri("/user/{userId}/roles",userId)
+                .exchangeToFlux(cr->cr.bodyToFlux(String.class));
+        Mono<UserDetails> userDetails = getUserDetails(userId);
+        return null;
     }
 }
