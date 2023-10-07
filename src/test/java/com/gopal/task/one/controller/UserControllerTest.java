@@ -34,7 +34,7 @@ class UserControllerTest {
     @DisplayName("Test to get user details - user exist")
     void getUserDetails() {
         Mockito.when(userDetailsService.getUserDetails(Mockito.anyLong()))
-                .thenAnswer(i -> Mono.just(TestUtil.getTestUserDetails(i.getArgument(0))));
+                .thenAnswer(i -> Mono.just(TestUtil.getTestUserDetailsDto(i.getArgument(0))));
         webClient.get().uri("/user/1")
                 .exchange()
                 .expectStatus().isOk()

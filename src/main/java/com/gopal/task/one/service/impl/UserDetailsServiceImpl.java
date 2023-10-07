@@ -8,7 +8,7 @@ import com.gopal.task.one.exception.UserNotFoundException;
 import com.gopal.task.one.mapper.UserMapper;
 import com.gopal.task.one.model.Role;
 import com.gopal.task.one.model.RolePermission;
-import com.gopal.task.one.model.UserDetails;
+import com.gopal.task.one.repository.RoleRepository;
 import com.gopal.task.one.repository.UserDetailsRepository;
 import com.gopal.task.one.repository.UserRoleDataRepository;
 import com.gopal.task.one.repository.UserRoleRepository;
@@ -16,9 +16,6 @@ import com.gopal.task.one.service.UserDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
-import org.springframework.data.relational.core.query.Criteria;
-import org.springframework.data.relational.core.query.Query;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,9 +35,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRoleRepository userRoleRepo;
 
-    private final R2dbcEntityTemplate template;
+    private final RoleRepository roleRepo;
 
-    private final UserRoleDataRepository userRoleDataRepository;
+    private final UserRoleDataRepository userRoleDataRepo;
 
     private final WebClient webClient;
 
@@ -59,8 +56,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public Flux<String> getRolesOfUser(Long userId) {
         return userRoleRepo.findAllByUserId(userId)
                 .flatMap(role ->
-                        template.selectOne(Query.query(Criteria.where("role_id").is(role.getRoleId())),
-                                Role.class))
+                        roleRepo.findById(role.getRoleId()))
                 .map(Role::getRoleName);
     }
 
@@ -86,7 +82,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         Mono<List<RolePermission>> roleFeaturesSet = userRoleRepo
                 .findAllByUserId(userId)
                 .flatMap(userRole -> {
-                    return userRoleDataRepository.getRoleFeatures(userRole.getRoleId());
+                    return userRoleDataRepo.getRoleFeatures(userRole.getRoleId());
                 })
                 .collectList().defaultIfEmpty(List.of())
                 .subscribeOn(Schedulers.boundedElastic());
