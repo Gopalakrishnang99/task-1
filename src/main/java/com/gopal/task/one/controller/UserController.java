@@ -30,12 +30,15 @@ public class UserController {
 
     @GetMapping("/{id}/roles")
     public Mono<ResponseEntity<Set<String>>> getRolesOfUser(@PathVariable Long id) {
-        return userService.getRolesOfUser(id).collect(Collectors.toSet()).map(ResponseEntity::ok);
+        return userService.getRolesOfUser(id)
+                .collect(Collectors.toSet())
+                .map(ResponseEntity::ok);
     }
 
     @GetMapping("/{id}/feature-set")
     public Mono<ResponseEntity<UserRolesDataDto>> getFeaturesOfUser(@PathVariable Long id) {
-        return userService.getRoleDetailsOfUser(id).map(ResponseEntity::ok);
+        return userService.getRoleDetailsOfUser(id)
+                .map(ResponseEntity::ok);
     }
 
 }

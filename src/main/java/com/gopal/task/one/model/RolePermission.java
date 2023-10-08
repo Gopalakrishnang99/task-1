@@ -4,6 +4,9 @@ import lombok.Data;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Table;
 
+/**
+ * DB entity representing a role and feature permissions mapping
+ */
 @Data
 @Table("role_permission_mapping")
 public class RolePermission {

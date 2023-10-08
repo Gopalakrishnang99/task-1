@@ -34,7 +34,9 @@ class UserControllerTest {
     @DisplayName("Test to get user details - user exist")
     void getUserDetails() {
         Mockito.when(userDetailsService.getUserDetails(Mockito.anyLong()))
-                .thenAnswer(i -> Mono.just(TestUtil.getTestUserDetailsDto(i.getArgument(0))));
+                .thenAnswer(i -> Mono.just(
+                        TestUtil.getTestUserDetailsDto(i.getArgument(0))
+                ));
         webClient.get().uri("/user/1")
                 .exchange()
                 .expectStatus().isOk()
@@ -48,7 +50,9 @@ class UserControllerTest {
     void getUserDetailsUserNotExisting() {
         Mockito.when(userDetailsService.getUserDetails(Mockito.anyLong()))
                 .thenReturn(Mono.error(new UserNotFoundException("User not found")));
-        webClient.get().uri("/user/3").exchange().expectStatus().is4xxClientError();
+        webClient.get().uri("/user/3")
+                .exchange()
+                .expectStatus().is4xxClientError();
     }
 
     @Test
@@ -91,7 +95,7 @@ class UserControllerTest {
                 .expectBody(UserRolesDataDto.class)
                 .returnResult()
                 .getResponseBody();
-        Assertions.assertEquals(response.getFeatures().size(),1);
+        Assertions.assertEquals(response.getFeatures().size(), 1);
         response.getFeatures().forEach(roleFeatureDto -> {
             Assertions.assertTrue(roleFeatureDto.getPermission().contains("read"));
         });

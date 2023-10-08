@@ -4,6 +4,9 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
+/**
+ * DB entity representing a role
+ */
 @Data
 @Table("role")
 public class Role {

@@ -5,6 +5,9 @@ import lombok.Data;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Represents the feature data of a user
+ */
 @Data
 public class RoleFeatureDto {
 

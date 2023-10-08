@@ -4,6 +4,9 @@ import lombok.Data;
 
 import java.util.Set;
 
+/**
+ * Represents the roles and features available for a user
+ */
 @Data
 public class UserRolesDataDto {
 
